@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { apiRequest } from '../api/http';
+import ResponsePanel from '../components/ResponsePanel';
 
 const DELIVERY_TYPES = ['SWIGGY', 'ZOMATO', 'DIRECT'];
 const ORDER_STATUSES = ['PENDING', 'CONFIRMED', 'DELIVERED'];
 
-function OrdersPage({ executeRequest, loading }) {
+function OrdersPage({ executeRequest, loading, error, responseData }) {
   const [orderForm, setOrderForm] = useState({
     userId: '2',
     deliveryType: 'DIRECT',
@@ -105,6 +106,8 @@ function OrdersPage({ executeRequest, loading }) {
           Update Order Status
         </button>
       </div>
+
+      <ResponsePanel loading={loading} error={error} responseData={responseData} />
     </section>
   );
 }

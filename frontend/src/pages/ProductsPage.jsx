@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { apiRequest } from '../api/http';
+import ResponsePanel from '../components/ResponsePanel';
 
 const PRODUCT_CATEGORIES = ['Momos', 'Waffles', 'Soups'];
 
-function ProductsPage({ executeRequest, loading }) {
+function ProductsPage({ executeRequest, loading, error, responseData }) {
   const [productForm, setProductForm] = useState({
     name: 'Peri Peri Momos',
     description: 'Spicy peri peri coated steamed momos',
@@ -128,6 +129,8 @@ function ProductsPage({ executeRequest, loading }) {
           Get By Category
         </button>
       </div>
+
+      <ResponsePanel loading={loading} error={error} responseData={responseData} />
     </section>
   );
 }

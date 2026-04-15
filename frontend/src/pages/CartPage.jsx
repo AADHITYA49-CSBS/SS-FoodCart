@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { apiRequest } from '../api/http';
+import ResponsePanel from '../components/ResponsePanel';
 
-function CartPage({ executeRequest, loading }) {
+function CartPage({ executeRequest, loading, error, responseData }) {
   const [cartForm, setCartForm] = useState({
     userId: '2',
     productId: '1',
@@ -102,6 +103,8 @@ function CartPage({ executeRequest, loading }) {
           Clear Cart
         </button>
       </div>
+
+      <ResponsePanel loading={loading} error={error} responseData={responseData} />
     </section>
   );
 }

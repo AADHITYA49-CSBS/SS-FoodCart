@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { apiRequest } from '../api/http';
+import ResponsePanel from '../components/ResponsePanel';
 
-function UsersPage({ executeRequest, loading }) {
+function UsersPage({ executeRequest, loading, error, responseData }) {
   const [registerForm, setRegisterForm] = useState({
     name: 'Demo Customer',
     email: 'demo.customer@ssfoodcart.com',
@@ -99,6 +100,8 @@ function UsersPage({ executeRequest, loading }) {
           Get User By Email
         </button>
       </div>
+
+      <ResponsePanel loading={loading} error={error} responseData={responseData} />
     </section>
   );
 }
