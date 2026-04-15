@@ -5,15 +5,18 @@ import com.ssfoodcart.backend.entity.UserRole;
 import com.ssfoodcart.backend.repository.UserRepository;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User registerUser(User user) {
@@ -32,6 +35,7 @@ public class UserService {
         userRepository.findByEmail(user.getEmail()).ifPresent(existingUser -> {
             throw new IllegalArgumentException("Email is already registered: " + user.getEmail());
         });
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -61,7 +65,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("User not found for email: " + email));
 
-        if (!password.equals(user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
 

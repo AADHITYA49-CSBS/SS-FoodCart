@@ -5,10 +5,13 @@ import com.ssfoodcart.backend.controller.dto.RegisterUserRequest;
 import com.ssfoodcart.backend.controller.dto.UserResponse;
 import com.ssfoodcart.backend.entity.User;
 import com.ssfoodcart.backend.entity.UserRole;
+import com.ssfoodcart.backend.security.JwtService;
 import com.ssfoodcart.backend.service.UserService;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,9 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtService jwtService, UserDetailsService userDetailsService) {
         this.userService = userService;
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
     }
 
     @PostMapping("/register")
@@ -42,17 +49,23 @@ public class UserController {
                 .build();
 
         User savedUser = userService.registerUser(user);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(savedUser.getEmail());
+        String token = jwtService.generateToken(userDetails);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of(
                         "message", "User registered successfully",
+                        "token", token,
                         "user", toUserResponse(savedUser)));
     }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
         User user = userService.authenticateUser(request.email(), request.password());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String token = jwtService.generateToken(userDetails);
         return ResponseEntity.ok(Map.of(
                 "message", "Login successful",
+                "token", token,
                 "user", toUserResponse(user)));
     }
 
