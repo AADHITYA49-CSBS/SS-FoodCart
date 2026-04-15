@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,7 +56,7 @@ public class OrderService {
         }
 
         userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found for ID: " + userId));
+                .orElseThrow(() -> new NoSuchElementException("User not found for ID: " + userId));
 
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("Cart not found for user ID: " + userId));
@@ -77,7 +78,7 @@ public class OrderService {
 
         for (CartItem cartItem : cartItems) {
             Product product = productRepository.findById(cartItem.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException(
+                    .orElseThrow(() -> new NoSuchElementException(
                             "Product not found for ID: " + cartItem.getProductId()));
 
             BigDecimal lineTotal = product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
@@ -116,6 +117,57 @@ public class OrderService {
             throw new IllegalArgumentException("User ID is required");
         }
         return orderRepository.findByUserId(userId);
+    }
+
+    public Order getOrderById(Long orderId) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("Order ID is required");
+        }
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new NoSuchElementException("Order not found for ID: " + orderId));
+    }
+
+    public List<OrderItem> getOrderItems(Long orderId) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("Order ID is required");
+        }
+        return orderItemRepository.findByOrderId(orderId);
+    }
+
+    public Order updateOrderStatus(Long orderId, String status) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("Order ID is required");
+        }
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException("Order status is required");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NoSuchElementException("Order not found for ID: " + orderId));
+
+        OrderStatus nextStatus;
+        try {
+            nextStatus = OrderStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Invalid order status: " + status);
+        }
+
+        OrderStatus currentStatus = order.getStatus();
+        if (currentStatus == nextStatus) {
+            return order;
+        }
+
+        boolean validTransition =
+                (currentStatus == OrderStatus.PENDING && nextStatus == OrderStatus.CONFIRMED)
+                        || (currentStatus == OrderStatus.CONFIRMED && nextStatus == OrderStatus.DELIVERED);
+
+        if (!validTransition) {
+            throw new IllegalStateException(
+                    "Invalid status transition from " + currentStatus + " to " + nextStatus);
+        }
+
+        order.setStatus(nextStatus);
+        return orderRepository.save(order);
     }
 }
 

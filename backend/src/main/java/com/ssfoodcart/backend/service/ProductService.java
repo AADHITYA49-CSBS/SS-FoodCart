@@ -3,6 +3,7 @@ package com.ssfoodcart.backend.service;
 import com.ssfoodcart.backend.entity.Product;
 import com.ssfoodcart.backend.repository.ProductRepository;
 import java.util.List;
+import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,6 +33,14 @@ public class ProductService {
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    public Product getProductById(Long productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("Product ID is required");
+        }
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new NoSuchElementException("Product not found for ID: " + productId));
     }
 
     public List<Product> getProductsByCategory(String category) {
